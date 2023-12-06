@@ -1,6 +1,6 @@
 # main text of home
-title: hugsun's blog
-bio: 资深宠物饲养员 / 空调滤网清洁员 / 客厅厕所保洁员 / 外卖预备役成员 / 滴滴出行驾驶员（未通过考试版）/ B站大会员 / 王牌划水员
+title: focalism's blog
+bio: 脑袋一拍这个要做 两手一摊我咋知道
 
 # twitter summary info
 # description: A blog about technology and stuff related
@@ -20,7 +20,7 @@ resume: false
 resume-external: true
 resume-url: https://google.com/?q=my+resume
 
-url: https://hugsun.github.io
+url: https://focalism.github.io
 # your url: https://USERNAME.github.io
 
 permalink: /:title/
@@ -38,13 +38,13 @@ disqus:
 # twitter: mytwitter
 # instagram: myinstagram
 # linkedin: mylinkedin
-github: hugsun
-email: s_xiaolei@126.com
+github: focalism
+email: xzg.nju@gmail.com
 
 authors:
   hugsun:
-    name: hugsun
-    bio: 资深宠物饲养员 / 空调滤网清洁员 / 客厅厕所保洁员 / 外卖预备役成员 / 滴滴出行驾驶员（未通过考试版）/ B站大会员 / 王牌划水员
+    name: focalism
+    bio: 脑袋一拍这个要做 两手一摊我咋知道
     external-image: false
     picture: assets/images/profile.png
     # twitter: johndoe
