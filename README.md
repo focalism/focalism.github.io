@@ -1,2 +1,2 @@
-# hugsun.github.io
-hugsun的个人博客
+# focalism.github.io
+focalism的个人博客
