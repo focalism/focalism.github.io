@@ -1,0 +1,419 @@
+---
+title: "Perforce安装与使用"
+layout: post
+date: 2023-12-26 14:06
+# image: /assets/images/markdown.jpg
+headerImage: false
+tag:
+- 杂记
+# star: true
+# hidden: true
+category: blog
+author: focalism
+description: Perforce安装与使用
+---
+
+
+##### 安装部署：
+- 1.windows安装：
+  [https://blog.csdn.net/weixin_42182599/article/details/104009997](https://blog.csdn.net/weixin_42182599/article/details/104009997)
+  [https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.windows.html](https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.windows.html)
+
+- 2.linux安装
+  [https://zhuanlan.zhihu.com/p/371328912](https://zhuanlan.zhihu.com/p/371328912)
+  [https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html](https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html)
+
+- 3.通过容器部署：
+  [https://blog.csdn.net/weixin_44559752/article/details/123888376](https://blog.csdn.net/weixin_44559752/article/details/123888376)
+
+
+
+##### 常用客户端命令行
+
+```shell
+p4 files:列出 depot 中的文件:
+ex: p4 files //TestDepot/main/1012test_data/...
+
+p4 dirs 列出给定 depot 目录的子目录 
+ex: p4 files //TestDepot/main/1012test_data/...
+
+p4 edit 打开并编辑文件,修改文件之前需要将文件设置为编辑模式
+ex：p4 edit //TestDepot/main/1012test_data/dialogs/dir_structure.xml
+
+p4 add 打开新文件并把它添加到 depot
+ex:p4 add //TestDepot/main/1012test_data/dialogs/dir_structure.xml
+
+p4 revert 废弃已打开文件的变更
+ex:p4 revert //TestDepot/main/1012test_data/...
+ex:p4 revert //TestDepot/main/1012test_data/dialogs/dir_structure.xml
+
+p4 sync 从远程同步到本地，类似于git pull
+ex: p4 sync -f //TestDepot/main/1012test_data/...
+
+p4 move 把文件从一个地方移到另一个地方
+ex: p4 move //TestDepot/main/1012test_data/dialogs/dir_structure.xml //TestDepot/main/1012test_data/dialogs/new_dir_structure.xml
+
+p4 delete 打开一个现存文件从 depot 中删除 
+ex: p4 delete //TestDepot/main/1012test_data/dialogs/dir_structure.xml 
+
+p4 submit 提交文件到 depot 
+ex: p4 submit -d "test submit"
+```
+
+
+
+##### 将远程文件同步到本地
+
+- 登录
+  ```shell
+  windows:
+  SET P4PORT=127.0.0.1:1666
+  SET P4USER=test
+  
+  linux:
+  export P4PORT=127.0.0.1:1666
+  export P4USER=test
+  
+  p4 login
+  ```
+
+- 创建workspace
+  ```shell
+  如果workspace已经创建可以直接执行：
+  windows:SET P4CLIENT=workspace_name
+  linux: export P4CLIENT=workspace_name
+  
+  创建workspace：
+  p4 client workspace_name
+  ```
+
+  在windows上会打开一个client 描述的文件
+
+  ```shell
+  # A Perforce Client Specification.
+  #
+  #  Client:      The client name.
+  #  Update:      The date this specification was last modified.
+  #  Access:      The date this client was last used in any way.
+  #  Owner:       The Perforce user name of the user who owns the client
+  #               workspace. The default is the user who created the
+  #               client workspace.
+  #  Host:        If set, restricts access to the named host.
+  #  Description: A short description of the client (optional).
+  #  Root:        The base directory of the client workspace.
+  #  AltRoots:    Up to two alternate client workspace roots.
+  #  Options:     Client options:
+  #                      [no]allwrite [no]clobber [no]compress
+  #                      [un]locked [no]modtime [no]rmdir
+  #  SubmitOptions:
+  #                      submitunchanged/submitunchanged+reopen
+  #                      revertunchanged/revertunchanged+reopen
+  #                      leaveunchanged/leaveunchanged+reopen
+  #  LineEnd:     Text file line endings on client: local/unix/mac/win/share.
+  #  Type:        Type of client: writeable/readonly/graph/partitioned.
+  #  ServerID:    If set, restricts access to the named server.
+  #  View:        Lines to map depot files into the client workspace.
+  #  ChangeView:  Lines to restrict depot files to specific changelists.
+  #  Stream:      The stream to which this client's view will be dedicated.
+  #               (Files in stream paths can be submitted only by dedicated
+  #               stream clients.) When this optional field is set, the
+  #               View field will be automatically replaced by a stream
+  #               view as the client spec is saved.
+  #  StreamAtChange:  A changelist number that sets a back-in-time view of a
+  #                   stream ( Stream field is required ).
+  #                   Changes cannot be submitted when this field is set.
+  #
+  # Use 'p4 help client' to see more about client views and options.
+  
+  Client:	test_workspace
+  
+  Owner:	p4admin
+  
+  Host:	HIH-D18257
+  
+  Description:
+  	Created by p4admin.
+  
+  Root:	c:\Users\username\test_workspace
+  
+  Options:	noallwrite noclobber nocompress unlocked nomodtime normdir
+  
+  SubmitOptions:	submitunchanged
+  
+  LineEnd:	local
+  
+  View:
+  	//spec/... //test_workspace/spec/...
+  	//depot/... //test_workspace/depot/...
+  ```
+
+ - 同步远程文件到本地
+
+   ```shell
+   进入到test_workspace目录，执行：
+   p4 sync -f //TestDepot/main/1012test_data/...
+   ```
+
+
+
+##### 创建stream
+
+```shell
+1.创建stream depot
+p4 depot -t stream TestDepot
+
+2.创建stream
+PS p4 stream -t mainline //TestDepot/main
+PS p4 stream -t development -P //TestDepot/main //TestDepot/dev
+
+3.创建workspace
+mkdir test_workspace2
+cd test_workspace2
+SET P4CLIENT=test_workspace2
+p4 client -S //TestDepot/main
+```
+
+
+
+##### python 实现p4客户端
+
+```python
+import os
+import traceback
+from P4 import P4, P4Exception
+
+
+class P4Client():
+
+    def __init__(self, user, password, host='127.0.0.1:1666' ) -> None:
+        self.client = P4()
+        self.host = host
+        self.user = user
+        self.password = password
+        # self.client.encoding="gbk"
+        
+    def connect(self, ticket=True):
+        if self.host.startswith('ssl:'):
+            os.system('export P4PORT={} && p4 trust -y'.format(self.host))
+        self.client.port = self.host
+        self.client.connect()
+        self.client.user = self.user
+        # 如果是通过ticket登录,则不需要设置密码
+        if not ticket or self.password is not None:
+            self.client.password = self.password
+            try:
+                self.client.run_login()
+            except P4Exception as e:
+                self.client.run_login()   
+        else:
+            try:
+                self.client.run_login('-s')
+            except P4Exception as e:
+                self.client.run_login('-s')
+
+                
+    def create_workspace(self, workspace_name, workspace_root, stream=None):
+        workspace = self.client.fetch_client( "-o", workspace_name)
+        workspace._root = workspace_root
+        workspace._host = ''
+        if stream:
+            workspace._stream = stream
+        self.client.save_client( workspace)
+
+    def sync_workspace(self, workspace_name, depot_path):
+        self.client.client = workspace_name
+        depot_path = depot_path.rstrip('/')+'/...'
+        self.client.run_sync('-f', depot_path)
+
+    def set_client(self, client_name):
+        self.client.client = client_name
+    
+    def edit(self, file):
+        self.client.run('edit', '-t', 'utf8', file)
+
+    def add(self, file):
+        self.client.run_add('-t', 'utf8', file)
+
+    def delete(self, file):
+        self.client.run_delete(file)
+
+    def status(self):
+        return self.client.run('status')
+            
+    def diff(self, *args, **kwargs):
+        result = []
+        diffs =  self.client.run('diff','-dub')
+        for item in diffs:
+            if isinstance(item, dict):
+                change_file_info = item
+                change_file_info['diff'] = ''
+                result.append(item)
+            else:
+                change_file_info['diff'] += item+'\n'
+
+        return result
+            
+    def changes(self, limit=None):
+        if limit is None:
+            return self.client.run('changes')
+        else:
+            return self.client.run('changes', '-m', limit)
+
+    def describe(self, change_id):
+        return self.client.run('describe', '-S',change_id)
+
+    def revert(self, file):
+        return self.client.run('revert', file)
+
+    def move(self,from_path, to_path):
+        return self.client.run('move', from_path, to_path)
+
+    @property
+    def latest_change_id(self):
+        return self.client.run('changes', '-m', 1)[0]['change']
+
+        
+    def submit(self, myfiles:list, description=''):
+        for item in myfiles:
+            self.edit(item)
+        change = self.client.fetch_change()
+        change._description = description
+        change._files = myfiles   # This attribute takes a Python list
+        return self.client.run_submit(change)
+
+    def walk(self, root):
+        result = {}
+        # 中文路径可能报错
+        self.client.encoding="gbk"
+        def _walk(path, result):
+            try:                
+                files = self.client.run( "files", "-e",path + '/*')
+            except:
+                files = []
+            for item in files:
+                item['file_name'] = os.path.basename(item['depotFile'])
+            
+            result['files'] = files
+            dirs = self.client.run("dirs", path + '/*')
+            result['dirs'] = {}
+            for item in dirs:
+                result['dirs'][os.path.basename(item['dir'])] = {}
+                _walk(item['dir'], result['dirs'][os.path.basename(item['dir'])])
+        _walk(root, result)
+        return result
+    
+    def streams(self, depot=None):
+        streams = self.client.run('streams')
+        if depot:
+            streams = [item for item in streams if item['Stream'].startswith(depot)]
+        return streams
+
+    def depots(self):
+        depots = self.client.run('depots')
+        for item in depots:
+            item['path'] = f"//{item['name']}"
+        return depots
+    
+    def dirs(self, root):
+        result = []
+        def _walk(path):
+            dirs = self.client.run("dirs", path + '/*')
+            for item in dirs:
+                if item['dir'] not in result:
+                    result.append(item['dir'])
+                _walk(item['dir'])
+        _walk(root)
+        return result
+
+    def exists(self, path, type='file'):
+        try:
+            if type=='file':
+                if self.client.run('files','-e', path):
+                    return True
+            else:
+                if self.client.run('dirs',path):
+                    return True
+            return False
+        except:
+            return False
+
+    def files(self, path):
+        result = []
+        def _walk(path):
+            try:                
+                files = self.client.run( "files", "-e",path + '/*')
+            except:
+                files = []
+            for item in files:
+                if item['depotFile'] not in result:
+                    result.append(item['depotFile'])
+
+            dirs = self.client.run("dirs", path + '/*')
+            for item in dirs:
+                _walk(item['dir'])
+        _walk(path)
+        return result
+
+    def is_edit(self, path):
+        file_stats = []
+        edit = False
+        file_stat = self.client.run('fstat', path)
+        for item in file_stat:
+            if item.get('action'):
+                edit_info = {'username':item['actionOwner'], 
+                    'workspace':self.client.client, 
+                    'action':item.get('action')
+                    }
+                if edit_info not in file_stats:
+                    file_stats.append(edit_info)     
+                edit = True
+
+            if item.get('otherOpen'):
+                for index, action in enumerate(item['otherOpen']):
+                    username, workspace = action.split('@')
+                    edit_info = {'username':username, 
+                    'workspace':workspace, 
+                    'action':item['otherAction'][index]
+                    }
+                    if edit_info not in file_stats:
+                        file_stats.append(edit_info)
+                edit = True
+        return edit, file_stats
+
+    def lock(self,path):
+        self.client.run('lock', path)
+
+    def unlock(self,path):
+        self.client.run('unlock', path)
+
+    def change_list(self, path):
+        return self.client.run('changelists',  path)
+
+    def filelog(self,path):
+        return self.client.run('filelog', path)
+
+    def print(self,path):
+        return self.client.run('print', path)
+
+    def rollback(self, path):
+        return self.client.run('undo', path)
+```
+
+
+
+##### 参考
+[Perforce的安装及使用](https://blog.csdn.net/weixin_42182599/article/details/104009997): https://blog.csdn.net/weixin_42182599/article/details/104009997
+
+[Windows installation](https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.windows.html): https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.windows.html
+
+[Perforce服务器搭建](https://zhuanlan.zhihu.com/p/371328912): https://zhuanlan.zhihu.com/p/371328912
+
+[Linux package-based installation](https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html):  https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html
+
+[五分钟手把手教你Perforce远端服务器搭建CentOS+Docker](https://blog.csdn.net/weixin_44559752/article/details/123888376)：https://blog.csdn.net/weixin_44559752/article/details/123888376
+
+[Win10 下 Perforce 命令行快速上手](https://paakmau.github.io/202007112038/)：https://paakmau.github.io/202007112038/
+
+[P4V 速查表 ](https://www.shdsd.com/wp-content/uploads/2020/10/p4-p4v-cheat-sheet_cn.pdf): https://www.shdsd.com/wp-content/uploads/2020/10/p4-p4v-cheat-sheet_cn.pdf
+
+[p4v用户手册](https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html): https://www.perforce.com/manuals/p4sag/Content/P4SAG/install.linux.packages.html
