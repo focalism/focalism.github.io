@@ -1,0 +1,133 @@
+---
+title: "Minio的安装与使用"
+layout: post
+date: 2023-12-27 10:22
+# image: /assets/images/markdown.jpg
+headerImage: false
+tag:
+- 杂记
+# star: true
+# hidden: true
+category: blog
+author: focalism
+description: Minio的安装与使用
+---
+
+##### 什么是minio
+
+> Minio是一个用golang开发的基于Apache License v2.0开源协议的对象存储服务。它与 Amazon S3 云存储服务 API 兼容。使用 MinIO 为机器学习、分析和应用程序数据工作负载构建高性能基础架构。
+
+##### minio与Amazon S3对比
+>MinIO适用于构建私有云存储环境和本地对象存储解决方案，具有轻量级和高性能的特点，但规模相对较小。
+>
+>FastDFS适用于存储大型文件，如媒体文件，注重简单高效的设计，但相对功能较简单。
+>
+>S3是一个全功能的对象存储服务，具有高可靠性和可扩展性，适用于云环境和大规模数据存储需求。
+
+
+
+##### 在diango中使用minion
+
+- 在settings.py添加如下配置
+
+  ```python
+  MINIO_ENDPOINT =  os.environ.get('MINIO_ENDPOINT') 
+  MINIO_ACCESS_KEY = os.environ.get('MINIO_ACCESS_KEY', 'admin')
+  MINIO_SECRET_KEY = os.environ.get('MINIO_SECRET_KEY', 'admin123456')
+  MINIO_USE_HTTPS = False
+  MINIO_URL_EXPIRY_HOURS = timedelta(days=1)  # Default is 7 days (longest) if not defined
+  MINIO_PRIVATE_BUCKETS = os.environ.get('MINIO_PRIVATE_BUCKETS', 'TEST').split(',')
+  MINIO_MEDIA_FILES_BUCKET = os.environ.get('MINIO_MEDIA_FILES_BUCKET', 'TEST')
+  MINIO_BUCKET_CHECK_ON_SAVE = True  # Default: True // Creates bucket if missing, then save
+  ```
+
+- 实现MinioStorage类
+
+  ```python
+  from django_minio_backend import MinioBackend
+  
+  class AutoBucketMinioStorage(MinioBackend):
+  
+      def __init__(self, bucket_name=settings.MINIO_MEDIA_FILES_BUCKET):
+          super(AutoBucketMinioStorage, self).__init__()
+          self.bucket_name = bucket_name
+  
+      def _save(self, name, content):
+          return super(AutoBucketMinioStorage, self)._save(name, content)
+  
+      def url(self, name, parameters=None, expire=None, http_method=None):
+          return super(AutoBucketMinioStorage, self).url(name)
+  
+      def delete(self, name):
+          return super(AutoBucketMinioStorage, self).delete(name)
+  
+      def open(self, name, mode='rb'):
+          return super(AutoBucketMinioStorage, self).open(name, mode)
+  ```
+
+- 在模型中使用MinioStorage类
+
+  ```python
+  class Person(models.Model):
+      name = models.CharField(max_length=256, unique=True)
+      race = models.CharField(max_length=256, null=True)
+      age = models.IntegerField(default=0)
+      gender = models.CharField(max_length=256, choices=gender_choices, default='male')
+      image = models.ImageField(upload_to=get_directory_path, storage=AutoBucketMinioStorage, null=True)
+      create_time = models.DateTimeField(auto_now_add=True)
+      update_time = models.DateTimeField(auto_now=True)
+      class Meta:
+          db_table ='Person'
+  ```
+
+- 实现一个新增Person的接口
+
+  ```python
+  class PersonViewSet(ModelViewSet):
+      queryset = Person.objects.all()
+      
+      def create(self, request, *args, **kwargs):
+          Person.objects.create(request.data)
+          return Response(request.data, status=status.HTTP_201_CREATED)
+  ```
+
+- 接口请求参数
+
+  ![image-20231227095659865](/assets/images/image-20231227095659865.png)
+
+
+
+##### Minio客户端工具mc
+
+```
+1.连接服务节点：
+mc config host add data http://127.0.0.1:9000 MINIO_ACCESS_KEY MINIO_SECRET_KEY，
+其中data是minio的位置
+
+2.展示data下的bucket
+mc ls data
+
+3.上传文件
+mc cp test.png data/bucket/image/test.png
+
+4.删除文件合对象
+mc rm data/bucket/image/test.png
+
+5.显示文件和对象内容
+mc cat data/bucket/image/test.png
+```
+
+
+
+
+
+##### 参考
+
+[MinIO、FastDFS和Amazon S3](https://blog.csdn.net/weixin_51473488/article/details/131424914)
+
+[MinIO与FastDFS对比](https://blog.csdn.net/qq_37351027/article/details/124454345?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124454345-blog-131424914.235%5Ev39%5Epc_relevant_anti_t3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124454345-blog-131424914.235%5Ev39%5Epc_relevant_anti_t3&utm_relevant_index=2)
+
+[MinIO Quickstart Guide](https://github.com/minio/minio?tab=readme-ov-file#minio-quickstart-guide)
+
+[MinIO 客户端安装与使用教程](https://blog.51cto.com/u_15294985/5826772)
+
